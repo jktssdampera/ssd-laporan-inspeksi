@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Render - SSD Inspection Report</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/form.css">
+  <link rel="stylesheet" href="./css/pdf.css">
+  
+  <style>
+    /* Reset body background for PDF */
+    body { background: white !important; margin: 0; padding: 0; }
+    #pdf-render-container {
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      z-index: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+    
+    /* Ensure no page-break on items in PDF */
+    .pdf-category-section { page-break-inside: avoid; }
+    .pdf-item-row { page-break-inside: avoid; }
+    .pdf-summary-section { page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+
+  <!-- Render Container -->
+  <div id="pdf-render-container"></div>
+
+  <!-- Only load scripts that buildPDFContent() actually needs -->
+  <script src="./js/form-data.js"></script>
+  <script src="./js/pdf-export.js"></script>
+  
+  <script>
+    // ─── Stubs for functions that buildPDFContent needs ───────────────
+    // These are normally provided by storage.js, but we don't need
+    // the full storage module here. The worker passes report data directly.
+    
+    let _renderReport = null;
+
+    function loadReportSync() {
+      return _renderReport || { customer: {}, inspections: {}, summary: {} };
+    }
+
+    function getInspectionStats() {
+      const report = loadReportSync();
+      const stats = { good: 0, warning: 0, danger: 0, unchecked: 0, total: 0 };
+
+      if (typeof INSPECTION_CATEGORIES !== 'undefined') {
+        INSPECTION_CATEGORIES.forEach(cat => {
+          cat.items.forEach(item => {
+            const catData = report.inspections && report.inspections[cat.id]
+              ? report.inspections[cat.id] : null;
+            const data = catData ? catData[item.id] : undefined;
+            const status = (data && data.status) ? data.status : 'unchecked';
+            if (stats.hasOwnProperty(status)) {
+              stats[status]++;
+            } else {
+              stats.unchecked++;
+            }
+            stats.total++;
+          });
+        });
+      }
+
+      return stats;
+    }
+
+    // ─── Called by Puppeteer via page.evaluate() ──────────────────────
+    function renderBackendPDF(reportData, workshopData) {
+      return new Promise((resolve, reject) => {
+        try {
+          // Parse JSON fields if they come as strings from Prisma
+          if (typeof reportData.customer === 'string') {
+            reportData.customer = JSON.parse(reportData.customer);
+          }
+          if (typeof reportData.inspections === 'string') {
+            reportData.inspections = JSON.parse(reportData.inspections);
+          }
+          if (typeof reportData.summary === 'string') {
+            reportData.summary = JSON.parse(reportData.summary);
+          }
+
+          // Make report data available to getInspectionStats()
+          _renderReport = reportData;
+
+          const container = document.getElementById('pdf-render-container');
+          const html = buildPDFContent(reportData, workshopData);
+          container.innerHTML = html;
+
+          // Wait for images to load before resolving
+          const images = container.querySelectorAll('img');
+          if (images.length === 0) {
+            setTimeout(() => resolve(true), 500);
+            return;
+          }
+
+          let loaded = 0;
+          const total = images.length;
+          const onLoad = () => {
+            loaded++;
+            if (loaded >= total) {
+              setTimeout(() => resolve(true), 500);
+            }
+          };
+
+          images.forEach(img => {
+            if (img.complete) {
+              onLoad();
+            } else {
+              img.addEventListener('load', onLoad);
+              img.addEventListener('error', onLoad); // Don't block on broken images
+            }
+          });
+
+          // Safety timeout — resolve after 10 seconds regardless
+          setTimeout(() => resolve(true), 10000);
+        } catch (err) {
+          console.error('[RenderPDF] Error:', err);
+          reject(err);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

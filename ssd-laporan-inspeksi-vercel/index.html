@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistem Laporan Inspeksi Kendaraan Digital — Super Shop&Drive Ampera">
+  <title>Car Inspection Report — Super Shop&Drive Ampera</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/form.css">
+  <link rel="stylesheet" href="css/pdf.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       LOGIN VIEW
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="login-view">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="Assets/logo.png" alt="Logo Super Shop&Drive Ampera">
+        <h1>Super Shop&Drive Ampera</h1>
+        <p>Sistem Inspeksi Kendaraan</p>
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="login-form-group">
+          <label for="login-username">Username</label>
+          <div class="login-input-wrapper">
+            <i data-lucide="user" class="input-icon"></i>
+            <input type="text" id="login-username" name="username"
+                   placeholder="Masukkan username" autocomplete="username" required>
+          </div>
+        </div>
+
+        <div class="login-form-group">
+          <label for="login-password">Password</label>
+          <div class="login-input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="login-password" name="password"
+                   placeholder="Masukkan password" autocomplete="current-password" required>
+            <button type="button" id="toggle-password" class="toggle-password-btn"
+                    aria-label="Tampilkan password">
+              <i data-lucide="eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error" class="login-error" role="alert"></div>
+
+        <button type="submit" class="login-btn">
+          <i data-lucide="log-in" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i>
+          Masuk
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       APP VIEW
+       ═══════════════════════════════════════════════════════════════════ -->
+  <div id="app-view" class="hidden">
+
+    <!-- Mobile Sidebar Toggle -->
+    <button type="button" id="sidebar-toggle" class="sidebar-toggle"
+            aria-label="Toggle menu" aria-expanded="false">
+      <i data-lucide="menu"></i>
+    </button>
+
+    <!-- ─── Sidebar ─────────────────────────────────────────────────── -->
+    <aside id="sidebar-nav" class="sidebar" role="navigation" aria-label="Navigasi utama">
+      <div class="sidebar-header">
+        <img src="Assets/logo.png" alt="" class="sidebar-logo">
+        <div class="sidebar-brand">
+          <h2>SSD Ampera</h2>
+          <p>Inspeksi Kendaraan</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <p class="sidebar-section-label">Menu</p>
+        <a href="#section-workshop" class="sidebar-link active">
+          <i data-lucide="building-2"></i> Info Bengkel
+        </a>
+        <a href="#section-customer" class="sidebar-link">
+          <i data-lucide="user-circle"></i> Data Customer
+        </a>
+
+        <p class="sidebar-section-label">Inspeksi</p>
+        <a href="#category-A" class="sidebar-link">
+          <i data-lucide="settings"></i> A. Mesin
+        </a>
+        <a href="#category-B" class="sidebar-link">
+          <i data-lucide="zap"></i> B. Kelistrikan
+        </a>
+        <a href="#category-C" class="sidebar-link">
+          <i data-lucide="disc"></i> C. Kaki-Kaki
+        </a>
+        <a href="#category-D" class="sidebar-link">
+          <i data-lucide="octagon"></i> D. Rem
+        </a>
+        <a href="#category-E" class="sidebar-link">
+          <i data-lucide="circle"></i> E. Ban & Velg
+        </a>
+
+        <p class="sidebar-section-label">Laporan</p>
+        <a href="#section-summary" class="sidebar-link">
+          <i data-lucide="clipboard-list"></i> Ringkasan
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" id="btn-toggle-theme" class="btn btn-ghost" style="width:100%; margin-bottom:var(--space-2)">
+          <i data-lucide="sun"></i> Light Mode
+        </button>
+        <button type="button" id="btn-logout" class="btn btn-ghost" style="width:100%">
+          <i data-lucide="log-out"></i> Logout
+        </button>
+      </div>
+    </aside>
+
+    <!-- ─── Main Content ────────────────────────────────────────────── -->
+    <main class="main-content">
+
+      <!-- Progress Bar -->
+      <div id="inspection-progress-container" class="progress-container">
+        <div class="progress-header">
+          <span class="progress-title">Progres Inspeksi</span>
+          <span class="progress-text" id="progress-text">0 / 42 (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Workshop Header -->
+      <section id="section-workshop">
+        <header class="workshop-header" id="workshop-header-info">
+          <img src="Assets/logo.png" alt="Logo Bengkel" class="header-logo" id="workshop-logo">
+          <div class="workshop-header-text">
+            <h1 id="workshop-name">Super Shop&Drive Ampera</h1>
+            <div id="workshop-details">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </header>
+      </section>
+
+      <!-- Customer & Vehicle Info -->
+      <section id="section-customer" class="section-card">
+        <h2 class="section-title">
+          <i data-lucide="user-circle"></i>
+          Data Customer & Kendaraan
+        </h2>
+        <div class="form-grid" id="customer-fields">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- Inspection Forms -->
+      <section id="section-inspection" class="section-card">
+        <h2 class="section-title">
+          <i data-lucide="clipboard-check"></i>
+          Form Inspeksi
+        </h2>
+        <div id="inspection-categories">
+          <!-- Rendered by JS — accordion per category -->
+        </div>
+      </section>
+
+      <!-- Summary & Recommendations -->
+      <section id="section-summary" class="section-card">
+        <h2 class="section-title">
+          <i data-lucide="file-text"></i>
+          Ringkasan & Rekomendasi
+        </h2>
+        <div class="form-grid" id="summary-fields">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <div class="footer-actions">
+        <div class="footer-actions-left">
+          <button type="button" id="btn-reset" class="btn btn-secondary">
+            <i data-lucide="refresh-cw"></i> Reset Report
+          </button>
+        </div>
+        <div class="footer-actions-right">
+          <button type="button" id="btn-download-pdf" class="btn btn-primary">
+            <i data-lucide="download"></i> Download PDF
+          </button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCRIPTS (load order matters — no modules)
+       ═══════════════════════════════════════════════════════════════════ -->
+  <!-- PDF Preview Modal -->
+  <div id="preview-modal" class="modal-overlay hidden">
+    <div class="modal-content preview-modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Preview Laporan</h3>
+        <button type="button" id="btn-close-preview" class="btn-icon" aria-label="Tutup Preview">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body preview-scroll-area">
+        <div id="preview-pdf-container"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-preview-download" class="btn btn-primary">
+          <i data-lucide="download"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/form-data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/photo-handler.js"></script>
+  <script src="js/form-renderer.js"></script>
+  <script src="js/pdf-export.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

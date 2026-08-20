@@ -1,0 +1,512 @@
+/**
+ * form.css
+ * Styling for form inputs, accordion, status radio buttons,
+ * photo upload dropzones, and inspection items.
+ */
+
+/* ─── Form Layout ───────────────────────────────────────────────────── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-height: 44px;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ─── Accordion ─────────────────────────────────────────────────────── */
+.accordion-section {
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  transition: border-color var(--transition-fast);
+}
+
+.accordion-section:has(.accordion-open) {
+  border-color: var(--color-accent);
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-secondary);
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  transition: background var(--transition-fast);
+  min-height: 56px;
+}
+
+.accordion-header:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.accordion-header:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.accordion-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.accordion-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.accordion-title {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.accordion-badge {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.accordion-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.accordion-chevron {
+  width: 18px;
+  height: 18px;
+  color: var(--color-text-tertiary);
+  transition: transform var(--transition-base);
+}
+
+.accordion-open .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--transition-slow);
+}
+
+.inspection-items {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* ─── Category Stats Badges ─────────────────────────────────────────── */
+.stat-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  min-width: 22px;
+  text-align: center;
+}
+
+.stat-good {
+  background: var(--color-status-good-bg);
+  color: var(--color-status-good);
+}
+
+.stat-warning {
+  background: var(--color-status-warning-bg);
+  color: var(--color-status-warning);
+}
+
+.stat-danger {
+  background: var(--color-status-danger-bg);
+  color: var(--color-status-danger);
+}
+
+/* ─── Inspection Item ───────────────────────────────────────────────── */
+.inspection-item {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+  margin-bottom: var(--space-3);
+  border-left: 3px solid var(--color-border);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.inspection-item:last-child {
+  margin-bottom: 0;
+}
+
+.inspection-item.item-good      { border-left-color: var(--color-status-good); }
+.inspection-item.item-warning   { border-left-color: var(--color-status-warning); }
+.inspection-item.item-danger    { border-left-color: var(--color-status-danger); }
+.inspection-item.item-unchecked { border-left-color: var(--color-text-tertiary); }
+
+.item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.item-code {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: center;
+}
+
+.item-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+/* ─── Item Controls ─────────────────────────────────────────────────── */
+.item-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* ─── Status Radio Group ────────────────────────────────────────────── */
+.status-group {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.status-radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  min-height: 36px;
+}
+
+.status-radio:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-tertiary);
+}
+
+.status-radio:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.status-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.status-label {
+  white-space: nowrap;
+}
+
+/* Status radio selected states */
+.status-radio.status-good.selected {
+  background: var(--color-status-good-bg);
+  border-color: var(--color-status-good);
+  color: var(--color-status-good);
+}
+
+.status-radio.status-warning.selected {
+  background: var(--color-status-warning-bg);
+  border-color: var(--color-status-warning);
+  color: var(--color-status-warning);
+}
+
+.status-radio.status-danger.selected {
+  background: var(--color-status-danger-bg);
+  border-color: var(--color-status-danger);
+  color: var(--color-status-danger);
+}
+
+.status-radio.status-unchecked.selected {
+  background: var(--color-status-unchecked-bg);
+  border-color: var(--color-status-unchecked);
+  color: var(--color-status-unchecked);
+}
+
+/* Unselected default color */
+.status-radio:not(.selected) {
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Note Input ────────────────────────────────────────────────────── */
+.item-note-wrapper {
+  width: 100%;
+}
+
+.item-note-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-height: 36px;
+}
+
+.item-note-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.item-note-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* ─── Photo Toggle Button ───────────────────────────────────────────── */
+.btn-toggle-photo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  align-self: flex-start;
+}
+
+.btn-toggle-photo:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-border-hover);
+  background: var(--color-bg-tertiary);
+}
+
+.btn-toggle-photo[aria-expanded="true"] {
+  border-style: solid;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+/* ─── Photo Upload ──────────────────────────────────────────────────── */
+.item-photos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.item-photos.hidden {
+  display: none !important;
+}
+
+.photo-slot {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  min-height: 80px;
+}
+
+.photo-slot.photo-loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Dropzone */
+.photo-dropzone {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  background: var(--color-bg-tertiary);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: var(--space-2);
+}
+
+.photo-dropzone:hover,
+.photo-dropzone.drag-over {
+  border-color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.photo-dropzone:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.photo-dropzone-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-tertiary);
+}
+
+.photo-dropzone-text {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.photo-dropzone-hint {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
+.photo-file-input {
+  display: none;
+}
+
+/* Photo Preview */
+.photo-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.photo-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  transition: transform var(--transition-fast);
+}
+
+.photo-thumbnail:hover {
+  transform: scale(1.02);
+}
+
+.photo-delete-btn {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.photo-preview:hover .photo-delete-btn {
+  opacity: 1;
+}
+
+.photo-delete-btn:focus-visible {
+  opacity: 1;
+  outline: 2px solid white;
+}
+
+.photo-delete-btn i {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .item-photos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .accordion-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .accordion-title {
+    font-size: var(--font-size-xs);
+  }
+
+  .inspection-item {
+    padding: var(--space-3);
+  }
+}
