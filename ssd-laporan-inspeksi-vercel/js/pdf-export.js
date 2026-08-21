@@ -381,11 +381,11 @@ function drawSummaryBlock(doc, title, content, x, y, width) {
   doc.roundedRect(x, y, width, blockHeight, 1.5, 1.5, 'FD');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor([51, 65, 85]);
+  doc.setTextColor(51, 65, 85);
   doc.text(title, x + 4, y + 5);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor([71, 85, 105]);
+  doc.setTextColor(71, 85, 105);
   const lines = doc.splitTextToSize(content, width - 8);
   doc.text(lines, x + 4, y + 10);
 }
