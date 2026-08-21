@@ -89,7 +89,17 @@ const INSPECTION_CATEGORIES = [
     name: 'Kelistrikan (Electrical)',
     icon: 'zap',
     items: [
-      { id: 'B1', label: 'Kondisi Aki / Baterai (voltase, terminal)' },
+      {
+        id: 'B1',
+        label: 'Kondisi Aki / Baterai (voltase, terminal)',
+        customStatusOptions: [
+          { value: 'good', label: 'Good & Pass (Bagus)', icon: 'check-circle', colorClass: 'status-good' },
+          { value: 'warning', label: 'Caution (Peringatan)', icon: 'alert-triangle', colorClass: 'status-warning' },
+          { value: 'danger', label: 'Bad & Replace (Disarankan Ganti)', icon: 'x-circle', colorClass: 'status-danger' },
+          { value: 'unchecked', label: 'Tidak Diperiksa', icon: 'minus-circle', colorClass: 'status-unchecked' }
+        ],
+        hasBatteryHealth: true
+      },
       { id: 'B2', label: 'Alternator / Pengisian' },
       { id: 'B4', label: 'Lampu Utama (dekat & jauh)' },
       { id: 'B5', label: 'Lampu Sein / Hazard' },

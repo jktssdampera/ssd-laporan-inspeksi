@@ -254,13 +254,22 @@ async function buildPDF(doc) {
       const catData = report.inspections && report.inspections[cat.id] ? report.inspections[cat.id] : null;
       const data = (catData && catData[item.id]) ? catData[item.id] : {};
       const status = data.status || 'unchecked';
-      const statusInfo = STATUS_OPTIONS.find(s => s.value === status);
+      
+      const optionsList = item.customStatusOptions || STATUS_OPTIONS;
+      const statusInfo = optionsList.find(s => s.value === status);
+      let statusLabel = statusInfo ? statusInfo.label : 'N/A';
+      
+      // Append Battery Health percentage if present
+      if (item.hasBatteryHealth && data.batteryHealth) {
+        statusLabel += ` (${data.batteryHealth}%)`;
+      }
+
       const photos = (data.photos || []).filter(Boolean);
       tableBody.push({
         id: item.id,
         label: item.label,
         status,
-        statusLabel: statusInfo ? statusInfo.label : 'N/A',
+        statusLabel,
         note: data.note || '-',
         photos
       });
@@ -277,8 +286,8 @@ async function buildPDF(doc) {
       columnStyles: {
         0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: PDF_COLORS.orange },
         1: { cellWidth: 'auto' },
-        2: { cellWidth: 28, halign: 'center' },
-        3: { cellWidth: 40 }
+        2: { cellWidth: 36, halign: 'center', fontSize: 7.5 },
+        3: { cellWidth: 36 }
       },
       didParseCell: function(data) {
         if (data.section === 'body' && data.column.index === 2) {

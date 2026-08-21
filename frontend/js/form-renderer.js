@@ -115,6 +115,7 @@ function renderInspectionItem(categoryId, item) {
   const catData = report.inspections && report.inspections[categoryId] ? report.inspections[categoryId] : null;
   const data = (catData && catData[item.id]) ? catData[item.id] : { status: 'unchecked', note: '', photos: [] };
   const hasPhotos = data.photos && data.photos.length > 0 && data.photos.some(p => p !== null);
+  const statusOptions = item.customStatusOptions || STATUS_OPTIONS;
 
   return `
     <div class="inspection-item" id="item-${item.id}" data-item-id="${item.id}">
@@ -125,7 +126,7 @@ function renderInspectionItem(categoryId, item) {
       
       <div class="item-controls">
         <div class="status-group" role="radiogroup" aria-label="Status ${item.label}">
-          ${STATUS_OPTIONS.map(opt => `
+          ${statusOptions.map(opt => `
             <label class="status-radio ${opt.colorClass} ${data.status === opt.value ? 'selected' : ''}"
                    tabindex="0" role="radio" aria-checked="${data.status === opt.value}">
               <input type="radio" name="status-${item.id}" value="${opt.value}"
@@ -136,6 +137,20 @@ function renderInspectionItem(categoryId, item) {
             </label>
           `).join('')}
         </div>
+
+        ${item.hasBatteryHealth ? `
+        <div class="battery-health-wrapper">
+          <label for="battery-health-${item.id}" class="battery-health-label">
+            <i data-lucide="zap" class="inline-icon" style="color: var(--color-accent);"></i> Health Battery (SOH)
+          </label>
+          <div class="battery-health-input-group">
+            <input type="number" id="battery-health-${item.id}" class="battery-health-input"
+                   min="0" max="100" placeholder="0-100"
+                   value="${escapeHtml(data.batteryHealth || '')}">
+            <span class="battery-health-unit">%</span>
+          </div>
+        </div>
+        ` : ''}
         
         <div class="item-note-wrapper">
           <label for="note-${item.id}" class="sr-only">Catatan untuk ${item.label}</label>
@@ -194,6 +209,15 @@ function initInspectionEvents() {
         handleStatusChange(radio);
       }
     });
+  });
+
+  // Battery health inputs
+  document.querySelectorAll('.battery-health-input').forEach(input => {
+    input.addEventListener('input', debounce(() => {
+      const itemId = input.id.replace('battery-health-', '');
+      const catId = itemId.charAt(0);
+      updateReportField(`inspections.${catId}.${itemId}.batteryHealth`, input.value);
+    }, 400));
   });
 
   // Note inputs
