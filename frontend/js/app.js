@@ -155,20 +155,7 @@ function initGlobalActions() {
   // Download PDF
   const pdfBtn = document.getElementById('btn-download-pdf');
   if (pdfBtn) {
-    pdfBtn.addEventListener('click', () => {
-      console.log('[App] Download PDF button clicked');
-      try {
-        if (typeof generatePDF !== 'function') {
-          console.error('[App] generatePDF is not a function!');
-          alert('Error: generatePDF function is not found. Harap clear cache browser (Ctrl + F5).');
-          return;
-        }
-        generatePDF();
-      } catch (err) {
-        console.error('[App] Error calling generatePDF:', err);
-        alert('Terjadi error saat mencoba generate PDF: ' + err.message);
-      }
-    });
+    pdfBtn.addEventListener('click', () => generatePDF());
   }
 
   // Preview PDF

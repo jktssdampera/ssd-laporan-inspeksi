@@ -128,11 +128,34 @@ function createEmptyReport() {
 async function loadReport() {
   if (_cache.report) return _cache.report;
 
+  if (!supabaseClient) {
+    console.error("Supabase tidak tersedia!");
+    _cache.report = createEmptyReport();
+    return _cache.report;
+  }
+
   try {
-    const res = await fetch(`${API_BASE}/api/reports/current`);
-    if (!res.ok) throw new Error('Failed to fetch current report');
+    // Cari report yang isCurrent = true
+    let { data: reports, error } = await supabaseClient
+      .from('reports')
+      .select('*')
+      .eq('isCurrent', true)
+      .limit(1);
+
+    let report = reports && reports.length > 0 ? reports[0] : null;
+
+    if (!report || error) {
+      // Jika tidak ada, buat baru
+      const { data: newReport, error: insertError } = await supabaseClient
+        .from('reports')
+        .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
+        .select()
+        .single();
+        
+      if (insertError) throw insertError;
+      report = newReport;
+    }
     
-    const report = await res.json();
     _currentReportId = report.id;
     
     // Ensure inspections structure exists (new reports from DB may be empty)
@@ -182,21 +205,22 @@ function saveReport(data) {
  * Flush cached report to backend via PATCH.
  */
 async function _flushToBackend() {
-  if (!_currentReportId || !_cache.report) return;
+  if (!_currentReportId || !_cache.report || !supabaseClient) return;
 
   try {
-    const res = await fetch(`${API_BASE}/api/reports/${_currentReportId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    const { error } = await supabaseClient
+      .from('reports')
+      .update({
         customer: _cache.report.customer,
         inspections: _cache.report.inspections,
-        summary: _cache.report.summary
+        summary: _cache.report.summary,
+        updatedAt: new Date().toISOString()
       })
-    });
+      .eq('id', _currentReportId);
 
-    if (!res.ok) {
-      console.error('[Storage] Failed to save report to backend');
+    if (error) {
+      console.error('[Storage] Failed to save report to backend', error);
+      throw error;
     }
   } catch (err) {
     console.error('[Storage] Network error saving report:', err);
@@ -238,22 +262,25 @@ async function resetReport() {
     // Flush any pending changes first
     await flushReportNow();
 
-    const res = await fetch(`${API_BASE}/api/reports`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
+    if (!supabaseClient) throw new Error("Supabase is not initialized");
 
-    if (!res.ok) throw new Error('Failed to create new report');
+    // Deactivate old current reports
+    await supabaseClient
+      .from('reports')
+      .update({ isCurrent: false })
+      .eq('isCurrent', true);
 
-    const newReport = await res.json();
+    // Create new report
+    const { data: newReport, error } = await supabaseClient
+      .from('reports')
+      .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
     _currentReportId = newReport.id;
-
-    // Initialize inspections structure
-    newReport.inspections = createEmptyReport().inspections;
     _cache.report = newReport;
-
-    // Persist the initial structure
-    await _flushToBackend();
 
     return _cache.report;
   } catch (err) {

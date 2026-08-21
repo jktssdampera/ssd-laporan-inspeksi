@@ -165,31 +165,45 @@ function base64ToBlob(base64, mime) {
 async function handlePhotoUpload(slotEl, itemId, slotIndex, file) {
   try {
     slotEl.classList.add('photo-loading');
+    
+    // Auto compress client-side
     const base64 = await compressImage(file);
     
-    // Convert base64 to Blob for FormData
-    const blob = base64ToBlob(base64, 'image/jpeg');
-    const formData = new FormData();
-    formData.append('file', blob, `${itemId}_${slotIndex}.jpg`);
+    // Convert base64 to Blob
+    const blob = base64ToBlob(base64, 'image/webp');
+    
+    // File path in Supabase Storage
+    const reportId = getReportId() || 'temp_report';
+    const fileName = `${reportId}/${itemId}_${slotIndex}_${Date.now()}.webp`;
 
-    const reportId = getReportId();
-    if (reportId) {
-      formData.append('reportId', reportId);
+    if (!supabaseClient) {
+      throw new Error('Supabase client belum diinisialisasi');
     }
 
-    // Upload to backend
-    const backendUrl = ''; // NGINX proxies /api/
-    const response = await fetch(`${backendUrl}/api/upload`, {
-      method: 'POST',
-      body: formData // fetch automatically sets Content-Type to multipart/form-data with boundary
-    });
-    
-    if (!response.ok) throw new Error('Gagal mengupload foto ke server');
-    
-    const { url } = await response.json();
-    const finalUrl = `${backendUrl}${url}`;
+    // Upload directly to Supabase Storage (Bucket: 'inspeksi')
+    const { data, error } = await supabaseClient
+      .storage
+      .from('inspeksi')
+      .upload(fileName, blob, {
+        cacheControl: '31536000',
+        upsert: false,
+        contentType: 'image/webp'
+      });
 
-    // Save to report cache & flush to MongoDB
+    if (error) {
+      console.error("Supabase Upload Error:", error);
+      throw new Error('Gagal mengupload foto ke Supabase: ' + error.message);
+    }
+    
+    // Get public URL
+    const { data: publicUrlData } = supabaseClient
+      .storage
+      .from('inspeksi')
+      .getPublicUrl(fileName);
+      
+    const finalUrl = publicUrlData.publicUrl;
+
+    // Save to report cache & flush to MongoDB/Supabase DB
     const report = loadReportSync();
     const catId = itemId.charAt(0);
     if (report.inspections[catId] && report.inspections[catId][itemId]) {
