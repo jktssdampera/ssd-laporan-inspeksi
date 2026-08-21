@@ -45,6 +45,9 @@ async function generatePDF() {
     const fileName = generateFilename(report);
     doc.save(fileName);
     showToast('PDF berhasil didownload!', 'good');
+
+    // Upload to Nextcloud in background (non-blocking)
+    uploadToNextcloud(doc, fileName);
   } catch (err) {
     console.error('[PDF] Generation failed:', err);
     showToast('Gagal membuat PDF: ' + err.message, 'danger');
@@ -54,6 +57,38 @@ async function generatePDF() {
       btn.innerHTML = '<i data-lucide="download"></i> Download PDF';
       if (window.lucide) lucide.createIcons({ nodes: [btn] });
     }
+  }
+}
+
+/**
+ * Upload PDF to Nextcloud via serverless function (background, non-blocking).
+ * If upload fails, user still has the local PDF download.
+ */
+async function uploadToNextcloud(doc, fileName) {
+  try {
+    showToast('⏳ Menyimpan ke Nextcloud...', 'good');
+    
+    const pdfBlob = doc.output('blob');
+    const formData = new FormData();
+    formData.append('file', pdfBlob, fileName);
+
+    const resp = await fetch('/api/upload-nextcloud', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await resp.json();
+
+    if (result.success) {
+      showToast('☁️ ' + result.message, 'good');
+      console.log('[Nextcloud] Upload success:', result.path);
+    } else {
+      showToast('⚠️ Nextcloud: ' + result.message, 'warning');
+      console.warn('[Nextcloud] Upload failed:', result.message);
+    }
+  } catch (err) {
+    console.warn('[Nextcloud] Upload error (non-fatal):', err);
+    showToast('⚠️ Gagal simpan ke Nextcloud (cek koneksi)', 'warning');
   }
 }
 
