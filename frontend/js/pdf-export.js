@@ -81,18 +81,21 @@ async function buildPDF(doc) {
   }
 
   // Helper – convert image URL to base64 (logo & photos)
-  async function toBase64(url) {
+  async function toBase64(url, forceJpeg = false) {
     try {
       if (!url) return null;
-      if (url.startsWith('data:')) return url.replace('image/webp', 'image/jpeg');
+      if (url.startsWith('data:')) {
+        if (forceJpeg) return url.replace(/^data:[^;]+;base64,/, 'data:image/jpeg;base64,');
+        return url;
+      }
       const resp = await fetch(url, { mode: 'cors' });
       const blob = await resp.blob();
       return await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           let result = reader.result;
-          if (typeof result === 'string') {
-            result = result.replace('data:image/webp;', 'data:image/jpeg;');
+          if (typeof result === 'string' && forceJpeg) {
+            result = result.replace(/^data:[^;]+;base64,/, 'data:image/jpeg;base64,');
           }
           resolve(result);
         };
@@ -123,7 +126,7 @@ async function buildPDF(doc) {
     marginLeft + 4, cursorY + 17.5);
 
   try {
-    const logoBase64 = await toBase64(workshop.logo);
+    const logoBase64 = await toBase64(workshop.logo, false);
     if (logoBase64) {
       doc.addImage(logoBase64, 'PNG', pageWidth - marginRight - 30, cursorY + 2, 28, 20, undefined, 'FAST');
     }
@@ -231,7 +234,7 @@ async function buildPDF(doc) {
         let photoX = marginLeft + 2;
         for (const photoUrl of row.photos) {
           try {
-            const base64 = await toBase64(photoUrl);
+            const base64 = await toBase64(photoUrl, true);
             if (base64) {
               ensureSpace(28);
               doc.addImage(base64, 'JPEG', photoX, cursorY, 30, 22, undefined, 'FAST');
