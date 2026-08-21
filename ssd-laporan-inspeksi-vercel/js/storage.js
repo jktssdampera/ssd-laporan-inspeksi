@@ -135,42 +135,86 @@ async function loadReport() {
   }
 
   try {
-    // Cari report yang isCurrent = true
-    let { data: reports, error } = await supabaseClient
+    const user = getCurrentUser();
+    const username = user ? user.username : '';
+
+    // Cari report yang isCurrent = true untuk user ini
+    let query = supabaseClient
       .from('reports')
       .select('*')
-      .eq('isCurrent', true)
-      .limit(1);
+      .eq('isCurrent', true);
+    
+    // Filter by username if column exists (graceful fallback)
+    if (username) {
+      query = query.eq('username', username);
+    }
+
+    let { data: reports, error } = await query.limit(1);
 
     let report = reports && reports.length > 0 ? reports[0] : null;
 
     if (!report || error) {
-      // Jika tidak ada, buat baru
+      // Buat report baru dengan username dan auto-fill fields
+      const newReportData = {
+        isCurrent: true,
+        inspections: createEmptyReport().inspections,
+        customer: {
+          mechanicName: user ? user.displayName : '',
+          inspectionDate: new Date().toISOString().split('T')[0]
+        }
+      };
+      // Try to include username (column might not exist yet)
+      if (username) newReportData.username = username;
+
       const { data: newReport, error: insertError } = await supabaseClient
         .from('reports')
-        .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
+        .insert([newReportData])
         .select()
         .single();
         
-      if (insertError) throw insertError;
-      report = newReport;
+      if (insertError) {
+        // If username column doesn't exist, retry without it
+        if (insertError.code === '42703') {
+          console.warn('[Storage] username column not found, creating report without it');
+          delete newReportData.username;
+          const { data: fallbackReport, error: fallbackError } = await supabaseClient
+            .from('reports')
+            .insert([newReportData])
+            .select()
+            .single();
+          if (fallbackError) throw fallbackError;
+          report = fallbackReport;
+        } else {
+          throw insertError;
+        }
+      } else {
+        report = newReport;
+      }
     }
     
     _currentReportId = report.id;
     
-    // Ensure inspections structure exists (new reports from DB may be empty)
+    // Ensure inspections structure exists
     if (!report.inspections || Object.keys(report.inspections).length === 0) {
       report.inspections = createEmptyReport().inspections;
-      // Persist the initial structure
       _cache.report = report;
       _flushToBackend();
+    }
+
+    // Auto-fill mechanicName and inspectionDate if missing
+    if (!report.customer) report.customer = {};
+    const user2 = getCurrentUser();
+    if (!report.customer.mechanicName && user2) {
+      report.customer.mechanicName = user2.displayName;
+    }
+    if (!report.customer.inspectionDate) {
+      report.customer.inspectionDate = new Date().toISOString().split('T')[0];
     }
     
     _cache.report = report;
     return _cache.report;
   } catch (err) {
     console.error('[Storage] Failed to load report from API:', err);
-    // Fallback: create an empty report in memory
     _cache.report = createEmptyReport();
     return _cache.report;
   }
@@ -264,20 +308,53 @@ async function resetReport() {
 
     if (!supabaseClient) throw new Error("Supabase is not initialized");
 
-    // Deactivate old current reports
-    await supabaseClient
+    const user = getCurrentUser();
+    const username = user ? user.username : '';
+
+    // Deactivate old current reports (only for this user)
+    let deactivateQuery = supabaseClient
       .from('reports')
       .update({ isCurrent: false })
       .eq('isCurrent', true);
+    
+    if (username) {
+      deactivateQuery = deactivateQuery.eq('username', username);
+    }
+    await deactivateQuery;
 
-    // Create new report
+    // Create new report with user info
+    const newReportData = {
+      isCurrent: true,
+      inspections: createEmptyReport().inspections,
+      customer: {
+        mechanicName: user ? user.displayName : '',
+        inspectionDate: new Date().toISOString().split('T')[0]
+      }
+    };
+    if (username) newReportData.username = username;
+
     const { data: newReport, error } = await supabaseClient
       .from('reports')
-      .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
+      .insert([newReportData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // Fallback if username column doesn't exist
+      if (error.code === '42703') {
+        delete newReportData.username;
+        const { data: fb, error: fbErr } = await supabaseClient
+          .from('reports')
+          .insert([newReportData])
+          .select()
+          .single();
+        if (fbErr) throw fbErr;
+        _currentReportId = fb.id;
+        _cache.report = fb;
+        return _cache.report;
+      }
+      throw error;
+    }
 
     _currentReportId = newReport.id;
     _cache.report = newReport;
@@ -286,7 +363,6 @@ async function resetReport() {
   } catch (err) {
     console.error('[Storage] Failed to reset report:', err);
     showToast('Gagal mereset report. Periksa koneksi server.', 'danger');
-    // Fallback to local reset
     _cache.report = createEmptyReport();
     return _cache.report;
   }
@@ -302,23 +378,38 @@ function getReportId() {
 // ─── Login Session ───────────────────────────────────────────────────
 
 function isLoggedIn() {
-  return sessionStorage.getItem(STORAGE_KEYS.SESSION) === 'true';
+  return !!sessionStorage.getItem('cir_username');
 }
 
-function setLoggedIn(val) {
+/**
+ * Get the currently logged-in user.
+ * @returns {{ username: string, displayName: string } | null}
+ */
+function getCurrentUser() {
+  const username = sessionStorage.getItem('cir_username');
+  const displayName = sessionStorage.getItem('cir_displayName');
+  if (!username) return null;
+  return { username, displayName: displayName || username };
+}
+
+function setLoggedIn(val, username, displayName) {
   if (val) {
     sessionStorage.setItem(STORAGE_KEYS.SESSION, 'true');
+    sessionStorage.setItem('cir_username', username || '');
+    sessionStorage.setItem('cir_displayName', displayName || username || '');
   } else {
     sessionStorage.removeItem(STORAGE_KEYS.SESSION);
+    sessionStorage.removeItem('cir_username');
+    sessionStorage.removeItem('cir_displayName');
   }
 }
 
 function authenticate(username, password) {
-  const match = AUTH_CREDENTIALS.some(
+  const match = AUTH_CREDENTIALS.find(
     acc => acc.username === username && acc.password === password
   );
   if (match) {
-    setLoggedIn(true);
+    setLoggedIn(true, match.username, match.displayName || match.username);
     return true;
   }
   return false;

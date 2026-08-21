@@ -12,12 +12,28 @@ function renderCustomerForm() {
   if (!container) return;
 
   const report = loadReportSync();
+  const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
 
   container.innerHTML = CUSTOMER_FIELDS.map(field => {
-    const value = (report.customer && report.customer[field.id]) ? report.customer[field.id] : '';
-    const defaultVal = field.type === 'date' && !value
-      ? new Date().toISOString().split('T')[0]
-      : value;
+    let value = (report.customer && report.customer[field.id]) ? report.customer[field.id] : '';
+
+    // Auto-fill logic
+    if (field.id === 'inspectionDate' && !value) {
+      value = new Date().toISOString().split('T')[0];
+      if (typeof updateReportField === 'function') {
+        updateReportField('customer.inspectionDate', value);
+      }
+    }
+    if (field.id === 'mechanicName' && (!value || value === '-')) {
+      if (user && user.displayName) {
+        value = user.displayName;
+        if (typeof updateReportField === 'function') {
+          updateReportField('customer.mechanicName', value);
+        }
+      }
+    }
+
+    const isReadOnly = (field.id === 'mechanicName' || field.id === 'inspectionDate');
 
     return `
       <div class="form-group">
@@ -26,7 +42,8 @@ function renderCustomerForm() {
         </label>
         <input type="${field.type}" id="${field.id}" name="${field.id}"
                class="form-input" placeholder="${field.placeholder}"
-               value="${defaultVal}"
+               value="${value}"
+               ${isReadOnly ? 'readonly style="opacity: 0.85; cursor: default;"' : ''}
                ${field.required ? 'required' : ''}>
       </div>
     `;

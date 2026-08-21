@@ -163,7 +163,8 @@ async function buildPDF(doc) {
   try {
     const logoBase64 = await toBase64(workshop.logo, false);
     if (logoBase64) {
-      doc.addImage(logoBase64, 'PNG', pageWidth - marginRight - 30, cursorY + 2, 28, 20, undefined, 'FAST');
+      // Logo proporsi 147:63 → width=28mm, height=28*(63/147)≈12mm
+      doc.addImage(logoBase64, 'PNG', pageWidth - marginRight - 30, cursorY + 6, 28, 12, undefined, 'FAST');
     }
   } catch (e) { console.warn('Logo embed failed:', e); }
 
@@ -190,7 +191,7 @@ async function buildPDF(doc) {
     ['Tahun',           c.vehicleYear || '-'],
     ['Nomor Polisi',    c.vehiclePlate || '-'],
     ['Odometer',        c.vehicleOdometer ? `${Number(c.vehicleOdometer).toLocaleString('id-ID')} KM` : '-'],
-    ['Tanggal Inspeksi', c.inspectionDate ? formatDate(c.inspectionDate) : '-'],
+    ['Tanggal Inspeksi', formatDate(c.inspectionDate || new Date().toISOString().split('T')[0])],
     ['Mekanik',         c.mechanicName || '-']
   ];
 

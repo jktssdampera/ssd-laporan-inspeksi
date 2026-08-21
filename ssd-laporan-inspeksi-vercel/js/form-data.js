@@ -21,9 +21,9 @@ try {
 
 // ─── Login Credentials (client-side only) ────────────────────────────
 const AUTH_CREDENTIALS = [
-  { username: 'admin', password: 'Komponen0285' },
-  { username: 'ssdampera', password: 'ampera0285' },
-  { username: 'sm0285', password: 'ampera0285' }
+  { username: 'admin',     password: 'Komponen0285', displayName: 'Admin SSD Ampera' },
+  { username: 'ssdampera', password: 'ampera0285',   displayName: 'Mekanik SSD Ampera' },
+  { username: 'sm0285',    password: 'ampera0285',   displayName: 'Service Manager' }
 ];
 
 // ─── Default Workshop Info ───────────────────────────────────────────
