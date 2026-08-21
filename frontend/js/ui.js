@@ -21,9 +21,13 @@ function initAccordions() {
 function toggleAccordion(header) {
   const content = header.nextElementSibling;
   const isOpen = header.classList.contains('accordion-open');
-  const icon = header.querySelector('.accordion-chevron');
 
   if (isOpen) {
+    // Set explicit pixel height before collapsing to allow CSS transition
+    content.style.maxHeight = content.scrollHeight + 'px';
+    content.style.overflow = 'hidden';
+    // Force reflow
+    void content.offsetHeight;
     content.style.maxHeight = '0';
     header.classList.remove('accordion-open');
     header.setAttribute('aria-expanded', 'false');
@@ -32,27 +36,30 @@ function toggleAccordion(header) {
     header.classList.add('accordion-open');
     header.setAttribute('aria-expanded', 'true');
 
-    // Recalculate after images load
+    // After animation finishes, release height restriction so it expands/shrinks dynamically
     setTimeout(() => {
       if (header.classList.contains('accordion-open')) {
-        content.style.maxHeight = content.scrollHeight + 'px';
+        content.style.maxHeight = 'none';
+        content.style.overflow = 'visible';
       }
-    }, 300);
+    }, 350);
   }
 }
 
 function openAccordion(header) {
   const content = header.nextElementSibling;
-  content.style.maxHeight = content.scrollHeight + 'px';
   header.classList.add('accordion-open');
   header.setAttribute('aria-expanded', 'true');
+  content.style.maxHeight = 'none';
+  content.style.overflow = 'visible';
 }
 
 function recalcAccordionHeight(categoryId) {
   const header = document.querySelector(`[data-category="${categoryId}"]`);
   if (header && header.classList.contains('accordion-open')) {
     const content = header.nextElementSibling;
-    content.style.maxHeight = content.scrollHeight + 'px';
+    content.style.maxHeight = 'none';
+    content.style.overflow = 'visible';
   }
 }
 

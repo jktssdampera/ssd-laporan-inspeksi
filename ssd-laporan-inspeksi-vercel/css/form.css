@@ -146,6 +146,10 @@
   transition: max-height var(--transition-slow);
 }
 
+.accordion-header.accordion-open + .accordion-body {
+  overflow: visible;
+}
+
 .inspection-items {
   padding: 0 var(--space-4) var(--space-4);
 }
