@@ -170,11 +170,11 @@ async function handlePhotoUpload(slotEl, itemId, slotIndex, file) {
     const base64 = await compressImage(file);
     
     // Convert base64 to Blob
-    const blob = base64ToBlob(base64, 'image/webp');
+    const blob = base64ToBlob(base64, 'image/jpeg');
     
     // File path in Supabase Storage
     const reportId = getReportId() || 'temp_report';
-    const fileName = `${reportId}/${itemId}_${slotIndex}_${Date.now()}.webp`;
+    const fileName = `${reportId}/${itemId}_${slotIndex}_${Date.now()}.jpg`;
 
     if (!supabaseClient) {
       throw new Error('Supabase client belum diinisialisasi');
@@ -187,7 +187,7 @@ async function handlePhotoUpload(slotEl, itemId, slotIndex, file) {
       .upload(fileName, blob, {
         cacheControl: '31536000',
         upsert: false,
-        contentType: 'image/webp'
+        contentType: 'image/jpeg'
       });
 
     if (error) {

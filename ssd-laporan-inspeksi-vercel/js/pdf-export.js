@@ -82,16 +82,27 @@ async function buildPDF(doc) {
 
   // Helper – convert image URL to base64 (logo & photos)
   async function toBase64(url) {
-    if (!url) return null;
-    if (url.startsWith('data:')) return url;
-    const resp = await fetch(url, { mode: 'cors' });
-    const blob = await resp.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    try {
+      if (!url) return null;
+      if (url.startsWith('data:')) return url.replace('image/webp', 'image/jpeg');
+      const resp = await fetch(url, { mode: 'cors' });
+      const blob = await resp.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          let result = reader.result;
+          if (typeof result === 'string') {
+            result = result.replace('data:image/webp;', 'data:image/jpeg;');
+          }
+          resolve(result);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('toBase64 failed for', url, e);
+      return null;
+    }
   }
 
   // ─── Header (logo + workshop details) ────────────────────
