@@ -21,9 +21,18 @@ try {
 
 // ─── Login Credentials (client-side only) ────────────────────────────
 const AUTH_CREDENTIALS = [
-  { username: 'admin',     password: 'Komponen0285', displayName: 'Admin SSD Ampera' },
-  { username: 'ssdampera', password: 'ampera0285',   displayName: 'Mekanik SSD Ampera' },
-  { username: 'sm0285',    password: 'ampera0285',   displayName: 'Service Manager' }
+  { username: 'admin', password: 'Komponen0285', displayName: 'Admin SSD Ampera' },
+  { username: 'ssdampera', password: 'ampera0285', displayName: 'Mekanik SSD Ampera' },
+  { username: 'sm0285', password: 'ampera0285', displayName: 'Service Manager' },
+  { username: 'imam', password: 'ampera0285', displayName: 'Imam Shahari' },
+  { username: 'hendrik', password: 'ampera0285', displayName: 'Hendrik Permana' },
+  { username: 'anto', password: 'ampera0285', displayName: 'Ismianto' },
+  { username: 'ryan', password: 'ampera0285', displayName: 'Ryan Nanda P' },
+  { username: 'Teguh', password: 'ampera0285', displayName: 'Teguh' },
+  { username: 'irfan', password: 'ampera0285', displayName: 'Irfan Fauzi Nur' },
+  { username: 'rizal', password: 'ampera0285', displayName: 'Rizal Pebrianto' },
+  { username: 'rafa', password: 'ampera0285', displayName: 'Rafa' },
+  { username: 'ali', password: 'ampera0285', displayName: 'ali' }
 ];
 
 // ─── Default Workshop Info ───────────────────────────────────────────
