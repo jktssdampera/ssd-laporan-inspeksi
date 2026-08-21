@@ -5,22 +5,22 @@
  */
 
 const PHOTO_CONFIG = {
-  maxWidth: 800,
-  quality: 0.7,
+  maxWidth: 1000,
+  quality: 0.75,
   acceptedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-  maxSizeBytes: 5 * 1024 * 1024 // 5MB input limit
+  maxSizeBytes: 50 * 1024 * 1024 // 50MB raw input limit (auto-compressed by canvas to ~150KB)
 };
 
 // ─── Image Compression ──────────────────────────────────────────────
 
 function compressImage(file) {
   return new Promise((resolve, reject) => {
-    if (!PHOTO_CONFIG.acceptedTypes.includes(file.type)) {
+    if (!PHOTO_CONFIG.acceptedTypes.includes(file.type) && !file.type.startsWith('image/')) {
       reject(new Error('Format file tidak didukung. Gunakan JPG, PNG, atau WebP.'));
       return;
     }
     if (file.size > PHOTO_CONFIG.maxSizeBytes) {
-      reject(new Error('Ukuran file terlalu besar (max 5MB).'));
+      reject(new Error('Ukuran file kamera terlalu besar (maksimal 50MB).'));
       return;
     }
 
