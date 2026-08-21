@@ -28,7 +28,7 @@ const AUTH_CREDENTIALS = [
   { username: 'hendrik', password: 'ampera0285', displayName: 'Hendrik Permana' },
   { username: 'anto', password: 'ampera0285', displayName: 'Ismianto' },
   { username: 'ryan', password: 'ampera0285', displayName: 'Ryan Nanda P' },
-  { username: 'Teguh', password: 'ampera0285', displayName: 'Teguh' },
+  { username: 'teguh', password: 'ampera0285', displayName: 'Teguh' },
   { username: 'irfan', password: 'ampera0285', displayName: 'Irfan Fauzi Nur' },
   { username: 'rizal', password: 'ampera0285', displayName: 'Rizal Pebrianto' },
   { username: 'rafa', password: 'ampera0285', displayName: 'Rafa' },

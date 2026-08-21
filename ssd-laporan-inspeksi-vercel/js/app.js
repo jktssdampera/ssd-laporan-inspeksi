@@ -158,6 +158,12 @@ function initGlobalActions() {
     pdfBtn.addEventListener('click', () => generatePDF());
   }
 
+  // Save to Nextcloud / Komputer
+  const nextcloudBtn = document.getElementById('btn-save-nextcloud');
+  if (nextcloudBtn) {
+    nextcloudBtn.addEventListener('click', () => saveToNextcloudOnly());
+  }
+
   // Preview PDF
   const previewBtn = document.getElementById('btn-preview-pdf');
   if (previewBtn) {

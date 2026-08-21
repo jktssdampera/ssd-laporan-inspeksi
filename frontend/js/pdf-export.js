@@ -93,6 +93,44 @@ async function uploadToNextcloud(doc, fileName) {
 }
 
 /**
+ * Saves generated PDF strictly to Nextcloud folder without downloading to local browser.
+ */
+async function saveToNextcloudOnly() {
+  const btn = document.getElementById('btn-save-nextcloud');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Menyimpan...';
+    if (window.lucide) lucide.createIcons({ nodes: [btn] });
+  }
+
+  try {
+    if (typeof flushReportNow === 'function') await flushReportNow();
+
+    showToast('Sedang membuat PDF...', 'good');
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    
+    await buildPDF(doc);
+
+    const report = loadReportSync();
+    const fileName = generateFilename(report);
+
+    // Upload directly to Nextcloud folder
+    await uploadToNextcloud(doc, fileName);
+  } catch (err) {
+    console.error('[Nextcloud Save] Failed:', err);
+    showToast('Gagal menyimpan: ' + err.message, 'danger');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="hard-drive"></i> Simpan di Komputer';
+      if (window.lucide) lucide.createIcons({ nodes: [btn] });
+    }
+  }
+}
+
+/**
  * Shared PDF generation logic - populates a jsPDF instance.
  */
 async function buildPDF(doc) {
