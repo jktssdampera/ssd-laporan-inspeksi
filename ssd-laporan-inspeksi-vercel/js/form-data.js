@@ -7,7 +7,17 @@
 // ─── Supabase Configuration ────────────────────────────────────────────
 const SUPABASE_URL = 'https://ussmphccrvrylaqtljri.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzc21waGNjcnZyeWxhcXRsanJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMjYwMzUsImV4cCI6MjA3NTYwMjAzNX0.yTlk3zSE0MZZ4WKpY5JIS1HHRpvc5mfKriLij3XbhCQ';
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let supabaseClient = null;
+try {
+  if (window.supabase && window.supabase.createClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('[Supabase] Client initialized successfully');
+  } else {
+    console.warn('[Supabase] Library not loaded, running in offline mode');
+  }
+} catch (e) {
+  console.error('[Supabase] Failed to initialize client:', e);
+}
 
 // ─── Login Credentials (client-side only) ────────────────────────────
 const AUTH_CREDENTIALS = [

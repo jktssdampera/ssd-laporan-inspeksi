@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     // Nextcloud config
     const nextcloudToken = 'zpc2LkfcyXzKGqY';
     const nextcloudUrl = `https://nc.ssdampera.web.id/nextcloud/public.php/webdav/${encodeURIComponent(fileName)}`;
-    const authHeader = 'Basic ' + Buffer.from(nextcloudToken + ':').toString('base64');
+    // Server proxies (e.g. Cloudflare) strip Basic auth if password is empty. Using token:token bypasses this.
+    const authHeader = 'Basic ' + Buffer.from(nextcloudToken + ':' + nextcloudToken).toString('base64');
 
     const ncResponse = await fetch(nextcloudUrl, {
       method: 'PUT',

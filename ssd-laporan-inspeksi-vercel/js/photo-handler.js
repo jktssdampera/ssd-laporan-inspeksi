@@ -176,12 +176,12 @@ async function handlePhotoUpload(slotEl, itemId, slotIndex, file) {
     const reportId = getReportId() || 'temp_report';
     const fileName = `${reportId}/${itemId}_${slotIndex}_${Date.now()}.webp`;
 
-    if (!supabase) {
+    if (!supabaseClient) {
       throw new Error('Supabase client belum diinisialisasi');
     }
 
     // Upload directly to Supabase Storage (Bucket: 'inspeksi')
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .storage
       .from('inspeksi')
       .upload(fileName, blob, {
@@ -196,7 +196,7 @@ async function handlePhotoUpload(slotEl, itemId, slotIndex, file) {
     }
     
     // Get public URL
-    const { data: publicUrlData } = supabase
+    const { data: publicUrlData } = supabaseClient
       .storage
       .from('inspeksi')
       .getPublicUrl(fileName);

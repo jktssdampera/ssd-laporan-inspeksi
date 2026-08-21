@@ -128,7 +128,7 @@ function createEmptyReport() {
 async function loadReport() {
   if (_cache.report) return _cache.report;
 
-  if (!window.supabase) {
+  if (!supabaseClient) {
     console.error("Supabase tidak tersedia!");
     _cache.report = createEmptyReport();
     return _cache.report;
@@ -136,7 +136,7 @@ async function loadReport() {
 
   try {
     // Cari report yang isCurrent = true
-    let { data: reports, error } = await window.supabase
+    let { data: reports, error } = await supabaseClient
       .from('reports')
       .select('*')
       .eq('isCurrent', true)
@@ -146,7 +146,7 @@ async function loadReport() {
 
     if (!report || error) {
       // Jika tidak ada, buat baru
-      const { data: newReport, error: insertError } = await window.supabase
+      const { data: newReport, error: insertError } = await supabaseClient
         .from('reports')
         .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
         .select()
@@ -205,10 +205,10 @@ function saveReport(data) {
  * Flush cached report to backend via PATCH.
  */
 async function _flushToBackend() {
-  if (!_currentReportId || !_cache.report || !window.supabase) return;
+  if (!_currentReportId || !_cache.report || !supabaseClient) return;
 
   try {
-    const { error } = await window.supabase
+    const { error } = await supabaseClient
       .from('reports')
       .update({
         customer: _cache.report.customer,
@@ -262,16 +262,16 @@ async function resetReport() {
     // Flush any pending changes first
     await flushReportNow();
 
-    if (!window.supabase) throw new Error("Supabase is not initialized");
+    if (!supabaseClient) throw new Error("Supabase is not initialized");
 
     // Deactivate old current reports
-    await window.supabase
+    await supabaseClient
       .from('reports')
       .update({ isCurrent: false })
       .eq('isCurrent', true);
 
     // Create new report
-    const { data: newReport, error } = await window.supabase
+    const { data: newReport, error } = await supabaseClient
       .from('reports')
       .insert([{ isCurrent: true, inspections: createEmptyReport().inspections }])
       .select()
