@@ -54,22 +54,24 @@
       const report = loadReportSync();
       const stats = { good: 0, warning: 0, danger: 0, unchecked: 0, total: 0 };
 
-      if (typeof INSPECTION_CATEGORIES !== 'undefined') {
-        INSPECTION_CATEGORIES.forEach(cat => {
-          cat.items.forEach(item => {
-            const catData = report.inspections && report.inspections[cat.id]
-              ? report.inspections[cat.id] : null;
-            const data = catData ? catData[item.id] : undefined;
-            const status = (data && data.status) ? data.status : 'unchecked';
-            if (stats.hasOwnProperty(status)) {
-              stats[status]++;
-            } else {
-              stats.unchecked++;
-            }
-            stats.total++;
-          });
+      const categories = (typeof getActiveCategories === 'function') 
+        ? getActiveCategories(report.systemMode || (report.customer && report.customer.inspectionType))
+        : (typeof INSPECTION_CATEGORIES !== 'undefined' ? INSPECTION_CATEGORIES : []);
+
+      categories.forEach(cat => {
+        cat.items.forEach(item => {
+          const catData = report.inspections && report.inspections[cat.id]
+            ? report.inspections[cat.id] : null;
+          const data = catData ? catData[item.id] : undefined;
+          const status = (data && data.status) ? data.status : 'unchecked';
+          if (stats.hasOwnProperty(status)) {
+            stats[status]++;
+          } else {
+            stats.unchecked++;
+          }
+          stats.total++;
         });
-      }
+      });
 
       return stats;
     }

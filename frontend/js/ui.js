@@ -126,7 +126,7 @@ function initSidebarNav() {
 }
 
 function initScrollSpy() {
-  const sections = document.querySelectorAll('section[id]');
+  const sections = document.querySelectorAll('section[id], .accordion-section[id]');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -198,6 +198,7 @@ function showLoginView() {
   const appView = document.getElementById('app-view');
   if (loginView) loginView.classList.remove('hidden');
   if (appView) appView.classList.add('hidden');
+  document.body.classList.remove('bhd-theme');
 }
 
 function showAppView() {
@@ -205,6 +206,13 @@ function showAppView() {
   const appView = document.getElementById('app-view');
   if (loginView) loginView.classList.add('hidden');
   if (appView) appView.classList.remove('hidden');
+  
+  const activeMode = (typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK';
+  if (activeMode === 'BHD') {
+    document.body.classList.add('bhd-theme');
+  } else {
+    document.body.classList.remove('bhd-theme');
+  }
 }
 
 // ─── Mobile Sidebar Toggle ──────────────────────────────────────────

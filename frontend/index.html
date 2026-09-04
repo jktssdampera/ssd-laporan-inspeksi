@@ -6,6 +6,10 @@
   <meta name="description" content="Sistem Laporan Inspeksi Kendaraan Digital — Super Shop&Drive Ampera">
   <title>Car Inspection Report — Super Shop&Drive Ampera</title>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="Assets/favicon.png">
+  <link rel="apple-touch-icon" href="Assets/favicon.png">
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +19,9 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=8">
-  <link rel="stylesheet" href="css/form.css?v=8">
-  <link rel="stylesheet" href="css/pdf.css?v=8">
+  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/form.css?v=9">
+  <link rel="stylesheet" href="css/pdf.css?v=9">
 </head>
 <body>
 
@@ -29,7 +33,22 @@
       <div class="login-logo">
         <img src="Assets/logo.png" alt="Logo Super Shop&Drive Ampera">
         <h1>Super Shop&Drive Ampera</h1>
-        <p>Sistem Inspeksi Kendaraan</p>
+        <p id="login-system-title">Sistem Inspeksi Kendaraan</p>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="login-mode-container">
+        <label class="login-mode-label">Pilih Sistem Inspeksi</label>
+        <div class="login-mode-selector" role="tablist" aria-label="Pilih Mode Inspeksi">
+          <button type="button" class="mode-tab active" data-mode="SIK" id="mode-tab-sik" role="tab" aria-selected="true">
+            <i data-lucide="car"></i>
+            <span>Inspeksi Kendaraan</span>
+          </button>
+          <button type="button" class="mode-tab" data-mode="BHD" id="mode-tab-bhd" role="tab" aria-selected="false">
+            <i data-lucide="zap"></i>
+            <span>Inspeksi BHD</span>
+          </button>
+        </div>
       </div>
 
       <form id="login-form" novalidate>
@@ -82,11 +101,11 @@
         <img src="Assets/logo.png" alt="" class="sidebar-logo">
         <div class="sidebar-brand">
           <h2>SSD Ampera</h2>
-          <p>Inspeksi Kendaraan</p>
+          <p id="sidebar-system-title">Inspeksi Kendaraan</p>
         </div>
       </div>
 
-      <nav class="sidebar-nav">
+      <nav class="sidebar-nav" id="sidebar-nav-container">
         <p class="sidebar-section-label">Menu</p>
         <a href="#section-workshop" class="sidebar-link active">
           <i data-lucide="building-2"></i> Info Bengkel
@@ -96,21 +115,23 @@
         </a>
 
         <p class="sidebar-section-label">Inspeksi</p>
-        <a href="#category-A" class="sidebar-link">
-          <i data-lucide="settings"></i> A. Mesin
-        </a>
-        <a href="#category-B" class="sidebar-link">
-          <i data-lucide="zap"></i> B. Kelistrikan
-        </a>
-        <a href="#category-C" class="sidebar-link">
-          <i data-lucide="disc"></i> C. Kaki-Kaki
-        </a>
-        <a href="#category-D" class="sidebar-link">
-          <i data-lucide="octagon"></i> D. Rem
-        </a>
-        <a href="#category-E" class="sidebar-link">
-          <i data-lucide="circle"></i> E. Ban & Velg
-        </a>
+        <div id="sidebar-inspection-links">
+          <a href="#category-A" class="sidebar-link">
+            <i data-lucide="settings"></i> A. Mesin
+          </a>
+          <a href="#category-B" class="sidebar-link">
+            <i data-lucide="zap"></i> B. Kelistrikan
+          </a>
+          <a href="#category-C" class="sidebar-link">
+            <i data-lucide="disc"></i> C. Kaki-Kaki
+          </a>
+          <a href="#category-D" class="sidebar-link">
+            <i data-lucide="octagon"></i> D. Rem
+          </a>
+          <a href="#category-E" class="sidebar-link">
+            <i data-lucide="circle"></i> E. Ban & Velg
+          </a>
+        </div>
 
         <p class="sidebar-section-label">Laporan</p>
         <a href="#section-summary" class="sidebar-link">
@@ -233,13 +254,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="js/form-data.js?v=8"></script>
-  <script src="js/storage.js?v=8"></script>
-  <script src="js/ui.js?v=8"></script>
-  <script src="js/photo-handler.js?v=8"></script>
-  <script src="js/form-renderer.js?v=8"></script>
-  <script src="js/pdf-export.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/form-data.js?v=9"></script>
+  <script src="js/storage.js?v=9"></script>
+  <script src="js/ui.js?v=9"></script>
+  <script src="js/photo-handler.js?v=9"></script>
+  <script src="js/form-renderer.js?v=9"></script>
+  <script src="js/pdf-export.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 
 </body>
 </html>

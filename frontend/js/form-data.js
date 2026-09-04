@@ -156,6 +156,119 @@ const INSPECTION_CATEGORIES = [
   }
 ];
 
+// ─── Inspection Categories & Items for BHD (Battery Home Delivery) ────
+const INSPECTION_CATEGORIES_BHD = [
+  {
+    id: 'A',
+    name: 'Mesin (Engine)',
+    icon: 'settings',
+    items: [
+      { id: 'A1', label: 'Kondisi Oli Mesin (warna, level, kekentalan)' },
+      { id: 'A2', label: 'Kondisi Filter Udara' },
+      { id: 'A3', label: 'Kondisi Radiator & Coolant' },
+      { id: 'A6', label: 'Kebocoran Oli / Cairan' },
+      { id: 'A10', label: 'Oli Transmisi (matic/manual) — level & kondisi' }
+    ]
+  },
+  {
+    id: 'B',
+    name: 'Kelistrikan (Electrical)',
+    icon: 'zap',
+    items: [
+      {
+        id: 'B1',
+        label: 'Kondisi Aki / Baterai (voltase, terminal)',
+        customStatusOptions: [
+          { value: 'good', label: 'Good & Pass (Bagus)', icon: 'check-circle', colorClass: 'status-good' },
+          { value: 'warning', label: 'Caution (Peringatan)', icon: 'alert-triangle', colorClass: 'status-warning' },
+          { value: 'danger', label: 'Bad & Replace (Disarankan Ganti)', icon: 'x-circle', colorClass: 'status-danger' },
+          { value: 'unchecked', label: 'Tidak Diperiksa', icon: 'minus-circle', colorClass: 'status-unchecked' }
+        ],
+        hasBatteryHealth: true
+      },
+      { id: 'B2', label: 'Alternator / Pengisian' },
+      { id: 'B9', label: 'Wiper & Washer' }
+    ]
+  },
+  {
+    id: 'C',
+    name: 'Kaki-Kaki (Suspension & Steering)',
+    icon: 'disc',
+    items: [
+      { id: 'C1', label: 'Shock Absorber Depan' },
+      { id: 'C2', label: 'Shock Absorber Belakang' },
+      { id: 'C8', label: 'Stabilizer Link & Bushing' }
+    ]
+  },
+  {
+    id: 'D',
+    name: 'Rem (Brake System)',
+    icon: 'octagon',
+    items: [
+      { id: 'D1', label: 'Kampas Rem Depan' },
+      { id: 'D2', label: 'Kampas Rem Belakang' },
+      { id: 'D3', label: 'Disc / Piringan Rem Depan' },
+      { id: 'D4', label: 'Disc / Drum Rem Belakang' },
+      { id: 'D7', label: 'Minyak Rem (level & kondisi)' }
+    ]
+  },
+  {
+    id: 'E',
+    name: 'Ban & Velg (Tires & Wheels)',
+    icon: 'circle',
+    items: [
+      { id: 'E1', label: 'Ban Depan Kiri (Tahun Produksi, Kondisi)' },
+      { id: 'E2', label: 'Ban Depan Kanan' },
+      { id: 'E3', label: 'Ban Belakang Kiri' },
+      { id: 'E4', label: 'Ban Belakang Kanan' },
+      { id: 'E5', label: 'Kondisi Velg (retak, peyang, aus)' }
+    ]
+  }
+];
+
+// ─── System Modes (SIK vs BHD) ───────────────────────────────────────
+const SYSTEM_MODES = {
+  SIK: {
+    id: 'SIK',
+    name: 'Sistem Inspeksi Kendaraan',
+    shortName: 'Inspeksi Kendaraan',
+    pdfPrefix: 'Inspeksi',
+    themeClass: 'sik-theme',
+    accentColor: '#f97316',
+    totalItems: 42
+  },
+  BHD: {
+    id: 'BHD',
+    name: 'Sistem Inspeksi BHD',
+    shortName: 'Inspeksi BHD',
+    pdfPrefix: 'Inspeksi_BHD',
+    themeClass: 'bhd-theme',
+    accentColor: '#0284c7',
+    totalItems: 21
+  }
+};
+
+function getActiveSystemMode() {
+  try {
+    return sessionStorage.getItem('cir_system_mode') || 'SIK';
+  } catch (e) {
+    return 'SIK';
+  }
+}
+
+function setActiveSystemMode(mode) {
+  try {
+    sessionStorage.setItem('cir_system_mode', mode === 'BHD' ? 'BHD' : 'SIK');
+  } catch (e) {
+    console.warn('[Storage] Failed to save system mode');
+  }
+}
+
+function getActiveCategories(mode = null) {
+  const currentMode = mode || getActiveSystemMode();
+  return currentMode === 'BHD' ? INSPECTION_CATEGORIES_BHD : INSPECTION_CATEGORIES;
+}
+
 // ─── Summary Fields ──────────────────────────────────────────────────
 const SUMMARY_FIELDS = [
   { id: 'summaryCondition', label: 'Kondisi Umum Kendaraan', type: 'textarea', placeholder: 'Deskripsikan kondisi umum kendaraan...' },
@@ -165,3 +278,4 @@ const SUMMARY_FIELDS = [
 
 // ─── Max photos per inspection item ──────────────────────────────────
 const MAX_PHOTOS_PER_ITEM = 2;
+

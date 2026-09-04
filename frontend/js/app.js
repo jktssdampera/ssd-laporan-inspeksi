@@ -12,6 +12,9 @@ function initApp() {
   // Init Theme
   initTheme();
 
+  // Init Login Mode Switcher
+  initLoginModeSwitcher();
+
   // Check login state
   if (isLoggedIn()) {
     showAppView();
@@ -22,6 +25,48 @@ function initApp() {
 
   // Login form handler
   initLoginForm();
+}
+
+// ─── Login Mode Switcher ─────────────────────────────────────────────
+
+function initLoginModeSwitcher() {
+  const tabs = document.querySelectorAll('.mode-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const mode = tab.dataset.mode;
+      selectLoginMode(mode);
+    });
+  });
+
+  // Initialize with active mode (default SIK)
+  const currentMode = (typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK';
+  selectLoginMode(currentMode);
+}
+
+function selectLoginMode(mode) {
+  const tabs = document.querySelectorAll('.mode-tab');
+  const loginView = document.getElementById('login-view');
+  const systemTitle = document.getElementById('login-system-title');
+
+  tabs.forEach(t => {
+    const isActive = t.dataset.mode === mode;
+    t.classList.toggle('active', isActive);
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+
+  if (mode === 'BHD') {
+    if (loginView) loginView.classList.add('bhd-mode');
+    if (systemTitle) systemTitle.textContent = 'Sistem Inspeksi BHD (Battery Home Delivery)';
+  } else {
+    if (loginView) loginView.classList.remove('bhd-mode');
+    if (systemTitle) systemTitle.textContent = 'Sistem Inspeksi Kendaraan';
+  }
+
+  if (typeof setActiveSystemMode === 'function') {
+    setActiveSystemMode(mode);
+  }
+
+  if (window.lucide) lucide.createIcons();
 }
 
 // ─── Login ───────────────────────────────────────────────────────────
@@ -77,7 +122,25 @@ function initLoginForm() {
 // ─── Bootstrap App ───────────────────────────────────────────────────
 
 async function bootstrapApp() {
-  // Load report from MongoDB (async)
+  const activeMode = (typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK';
+  
+  // Apply theme class to body
+  if (activeMode === 'BHD') {
+    document.body.classList.add('bhd-theme');
+  } else {
+    document.body.classList.remove('bhd-theme');
+  }
+
+  // Update sidebar brand title
+  const sidebarTitle = document.getElementById('sidebar-system-title');
+  if (sidebarTitle) {
+    sidebarTitle.textContent = activeMode === 'BHD' ? 'Inspeksi BHD' : 'Inspeksi Kendaraan';
+  }
+
+  // Render dynamic sidebar inspection links
+  renderSidebarLinks();
+
+  // Load report from MongoDB / Supabase (async)
   await loadReport();
 
   // Load & render workshop header
@@ -117,6 +180,20 @@ async function bootstrapApp() {
 
   // Wire up global actions
   initGlobalActions();
+}
+
+function renderSidebarLinks() {
+  const container = document.getElementById('sidebar-inspection-links');
+  if (!container) return;
+
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories() : INSPECTION_CATEGORIES;
+  container.innerHTML = categories.map(cat => `
+    <a href="#category-${cat.id}" class="sidebar-link">
+      <i data-lucide="${cat.icon}"></i> ${cat.id}. ${cat.name.split('(')[0].trim()}
+    </a>
+  `).join('');
+
+  if (window.lucide) lucide.createIcons({ nodes: [container] });
 }
 
 // ─── Workshop Header ─────────────────────────────────────────────────
@@ -207,6 +284,7 @@ function initGlobalActions() {
     logoutBtn.addEventListener('click', () => {
       logout();
       showLoginView();
+      selectLoginMode('SIK');
       showToast('Berhasil logout.', 'info');
     });
   }

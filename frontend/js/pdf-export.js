@@ -7,6 +7,7 @@
 // ─── Color palette ────────────────────────────────────────
 const PDF_COLORS = {
   orange:    [249, 115, 22],
+  cyan:      [2, 132, 199],
   white:     [255, 255, 255],
   black:     [0, 0, 0],
   darkGray:  [30, 30, 40],
@@ -208,13 +209,19 @@ async function buildPDF(doc) {
 
   cursorY += 27;
 
+  // ─── Detect active mode (SIK vs BHD) ──────────────────
+  const isBHD = (report.systemMode === 'BHD') || (report.customer && report.customer.inspectionType === 'BHD') || (typeof getActiveSystemMode === 'function' && getActiveSystemMode() === 'BHD');
+  const titleColor = isBHD ? PDF_COLORS.cyan : PDF_COLORS.orange;
+  const titleText = isBHD ? 'LAPORAN INSPEKSI BHD (BATTERY HOME DELIVERY)' : 'LAPORAN INSPEKSI KENDARAAN';
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories(isBHD ? 'BHD' : 'SIK') : INSPECTION_CATEGORIES;
+
   // ─── Title bar ────────────────────────────────────────
-  doc.setFillColor(...PDF_COLORS.orange);
+  doc.setFillColor(...titleColor);
   doc.rect(marginLeft, cursorY, contentWidth, 8, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(...PDF_COLORS.white);
-  doc.text('LAPORAN INSPEKSI KENDARAAN', pageWidth / 2, cursorY + 5.5, { align: 'center' });
+  doc.text(titleText, pageWidth / 2, cursorY + 5.5, { align: 'center' });
   cursorY += 12;
 
   // ─── Customer & vehicle table ───────────────────────
@@ -244,7 +251,7 @@ async function buildPDF(doc) {
   cursorY = doc.lastAutoTable.finalY + 6;
 
   // ─── Inspection tables per category ───────────────────
-  for (const cat of INSPECTION_CATEGORIES) {
+  for (const cat of categories) {
     ensureSpace(25);
     drawSectionTitle(doc, `${cat.id}. ${cat.name}`, marginLeft, cursorY, contentWidth);
     cursorY += 8;
@@ -485,7 +492,9 @@ function generateFilename(report) {
   const plate = c.vehiclePlate || 'NoPol';
   const date = c.inspectionDate || new Date().toISOString().split('T')[0];
   const clean = str => str.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
-  return `Inspeksi_${clean(customer)}_${clean(plate)}_${date}.pdf`;
+  const isBHD = (report.systemMode === 'BHD') || (c.inspectionType === 'BHD') || (typeof getActiveSystemMode === 'function' && getActiveSystemMode() === 'BHD');
+  const prefix = isBHD ? 'Inspeksi_BHD' : 'Inspeksi';
+  return `${prefix}_${clean(customer)}_${clean(plate)}_${date}.pdf`;
 }
 
 function formatDate(dateStr) {

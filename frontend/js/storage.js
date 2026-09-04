@@ -20,7 +20,8 @@ const API_BASE = ''; // NGINX reverse proxies /api/
 // ─── In-memory cache (cache-first pattern) ───────────────────────────
 let _cache = {
   workshop: null,
-  report: null
+  report: null,
+  reportMode: null
 };
 
 // Current report MongoDB _id
@@ -96,11 +97,14 @@ function saveWorkshopInfo(data) {
   }
 }
 
-// ─── Current Report (MongoDB via API) ────────────────────────────────
+// ─── Current Report (MongoDB / Supabase via API) ─────────────────────
 
-function createEmptyReport() {
+function createEmptyReport(mode = null) {
+  const activeMode = mode || (typeof getActiveSystemMode === 'function' ? getActiveSystemMode() : 'SIK');
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories(activeMode) : INSPECTION_CATEGORIES;
   const inspections = {};
-  INSPECTION_CATEGORIES.forEach(cat => {
+
+  categories.forEach(cat => {
     inspections[cat.id] = {};
     cat.items.forEach(item => {
       inspections[cat.id][item.id] = {
@@ -112,7 +116,10 @@ function createEmptyReport() {
   });
 
   return {
-    customer: {},
+    systemMode: activeMode,
+    customer: {
+      inspectionType: activeMode
+    },
     inspections: inspections,
     summary: {},
     createdAt: new Date().toISOString(),
@@ -122,15 +129,20 @@ function createEmptyReport() {
 
 /**
  * Load report from backend API (async).
- * Uses cache-first: if cache exists, return immediately.
- * On first call, fetches from MongoDB.
+ * Uses cache-first: if cache exists for current mode, return immediately.
+ * On first call, fetches from Supabase.
  */
 async function loadReport() {
-  if (_cache.report) return _cache.report;
+  const activeMode = (typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK';
+
+  if (_cache.report && _cache.reportMode === activeMode) {
+    return _cache.report;
+  }
 
   if (!supabaseClient) {
     console.error("Supabase tidak tersedia!");
-    _cache.report = createEmptyReport();
+    _cache.report = createEmptyReport(activeMode);
+    _cache.reportMode = activeMode;
     return _cache.report;
   }
 
@@ -149,16 +161,29 @@ async function loadReport() {
       query = query.eq('username', username);
     }
 
-    let { data: reports, error } = await query.limit(1);
+    let { data: reports, error } = await query;
 
-    let report = reports && reports.length > 0 ? reports[0] : null;
+    // Filter report yang sesuai dengan mode (SIK vs BHD)
+    let report = null;
+    if (reports && reports.length > 0) {
+      report = reports.find(r => {
+        const rMode = r.systemMode || (r.customer && r.customer.inspectionType);
+        if (activeMode === 'BHD') {
+          return rMode === 'BHD';
+        } else {
+          return rMode === 'SIK' || !rMode;
+        }
+      });
+    }
 
     if (!report || error) {
-      // Buat report baru dengan username dan auto-fill fields
+      // Buat report baru dengan username dan auto-fill fields untuk activeMode
+      const emptyData = createEmptyReport(activeMode);
       const newReportData = {
         isCurrent: true,
-        inspections: createEmptyReport().inspections,
+        inspections: emptyData.inspections,
         customer: {
+          inspectionType: activeMode,
           mechanicName: user ? user.displayName : '',
           inspectionDate: new Date().toISOString().split('T')[0]
         }
@@ -193,16 +218,19 @@ async function loadReport() {
     }
     
     _currentReportId = report.id;
+    report.systemMode = activeMode;
     
-    // Ensure inspections structure exists
+    // Ensure inspections structure exists for current active categories
     if (!report.inspections || Object.keys(report.inspections).length === 0) {
-      report.inspections = createEmptyReport().inspections;
+      report.inspections = createEmptyReport(activeMode).inspections;
       _cache.report = report;
+      _cache.reportMode = activeMode;
       _flushToBackend();
     }
 
-    // Auto-fill mechanicName and inspectionDate if missing
+    // Auto-fill mechanicName, inspectionDate, and inspectionType if missing
     if (!report.customer) report.customer = {};
+    report.customer.inspectionType = activeMode;
     const user2 = getCurrentUser();
     if (!report.customer.mechanicName && user2) {
       report.customer.mechanicName = user2.displayName;
@@ -212,10 +240,12 @@ async function loadReport() {
     }
     
     _cache.report = report;
+    _cache.reportMode = activeMode;
     return _cache.report;
   } catch (err) {
     console.error('[Storage] Failed to load report from API:', err);
-    _cache.report = createEmptyReport();
+    _cache.report = createEmptyReport(activeMode);
+    _cache.reportMode = activeMode;
     return _cache.report;
   }
 }
@@ -299,9 +329,11 @@ function updateReportField(path, value) {
 }
 
 /**
- * Reset report: create new in MongoDB, deactivate old one.
+ * Reset report: create new in MongoDB/Supabase, deactivate old one for current mode.
  */
 async function resetReport() {
+  const activeMode = (typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK';
+
   try {
     // Flush any pending changes first
     await flushReportNow();
@@ -311,22 +343,37 @@ async function resetReport() {
     const user = getCurrentUser();
     const username = user ? user.username : '';
 
-    // Deactivate old current reports (only for this user)
-    let deactivateQuery = supabaseClient
+    // Deactivate old current reports for this user and this active mode
+    let fetchQuery = supabaseClient
       .from('reports')
-      .update({ isCurrent: false })
+      .select('id, systemMode, customer')
       .eq('isCurrent', true);
-    
-    if (username) {
-      deactivateQuery = deactivateQuery.eq('username', username);
-    }
-    await deactivateQuery;
+    if (username) fetchQuery = fetchQuery.eq('username', username);
 
-    // Create new report with user info
+    const { data: activeReports } = await fetchQuery;
+    if (activeReports && activeReports.length > 0) {
+      const idsToDeactivate = activeReports
+        .filter(r => {
+          const rMode = r.systemMode || (r.customer && r.customer.inspectionType);
+          return activeMode === 'BHD' ? rMode === 'BHD' : (rMode === 'SIK' || !rMode);
+        })
+        .map(r => r.id);
+
+      if (idsToDeactivate.length > 0) {
+        await supabaseClient
+          .from('reports')
+          .update({ isCurrent: false })
+          .in('id', idsToDeactivate);
+      }
+    }
+
+    // Create new report with user info and activeMode
+    const emptyData = createEmptyReport(activeMode);
     const newReportData = {
       isCurrent: true,
-      inspections: createEmptyReport().inspections,
+      inspections: emptyData.inspections,
       customer: {
+        inspectionType: activeMode,
         mechanicName: user ? user.displayName : '',
         inspectionDate: new Date().toISOString().split('T')[0]
       }
@@ -349,21 +396,27 @@ async function resetReport() {
           .select()
           .single();
         if (fbErr) throw fbErr;
+        fb.systemMode = activeMode;
         _currentReportId = fb.id;
         _cache.report = fb;
+        _cache.reportMode = activeMode;
         return _cache.report;
       }
       throw error;
     }
 
+    newReport.systemMode = activeMode;
     _currentReportId = newReport.id;
     _cache.report = newReport;
+    _cache.reportMode = activeMode;
 
     return _cache.report;
   } catch (err) {
     console.error('[Storage] Failed to reset report:', err);
     showToast('Gagal mereset report. Periksa koneksi server.', 'danger');
-    _cache.report = createEmptyReport();
+    const fallback = createEmptyReport(activeMode);
+    _cache.report = fallback;
+    _cache.reportMode = activeMode;
     return _cache.report;
   }
 }
@@ -401,6 +454,9 @@ function setLoggedIn(val, username, displayName) {
     sessionStorage.removeItem(STORAGE_KEYS.SESSION);
     sessionStorage.removeItem('cir_username');
     sessionStorage.removeItem('cir_displayName');
+    _cache.report = null;
+    _cache.reportMode = null;
+    _currentReportId = null;
   }
 }
 
@@ -424,8 +480,10 @@ function logout() {
 function getInspectionStats() {
   const report = loadReportSync();
   const stats = { good: 0, warning: 0, danger: 0, unchecked: 0, total: 0 };
+  const activeMode = report.systemMode || (report.customer && report.customer.inspectionType) || ((typeof getActiveSystemMode === 'function') ? getActiveSystemMode() : 'SIK');
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories(activeMode) : INSPECTION_CATEGORIES;
 
-  INSPECTION_CATEGORIES.forEach(cat => {
+  categories.forEach(cat => {
     cat.items.forEach(item => {
       const data = report.inspections && report.inspections[cat.id] ? report.inspections[cat.id][item.id] : undefined;
       const status = (data && data.status) ? data.status : 'unchecked';

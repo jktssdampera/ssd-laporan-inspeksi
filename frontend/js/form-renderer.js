@@ -66,7 +66,9 @@ function renderInspectionForms() {
   const container = document.getElementById('inspection-categories');
   if (!container) return;
 
-  container.innerHTML = INSPECTION_CATEGORIES.map(cat => {
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories() : INSPECTION_CATEGORIES;
+
+  container.innerHTML = categories.map(cat => {
     const stats = getCategoryStats(cat.id);
     return `
       <div class="accordion-section" id="category-${cat.id}">
@@ -230,7 +232,8 @@ function initInspectionEvents() {
   });
 
   // Photo slots
-  INSPECTION_CATEGORIES.forEach(cat => {
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories() : INSPECTION_CATEGORIES;
+  categories.forEach(cat => {
     cat.items.forEach(item => {
       const photosContainer = document.getElementById(`photos-${item.id}`);
       if (photosContainer) {
@@ -343,7 +346,9 @@ window.updateProgressBar = function() {
   let totalItems = 0;
   let completedItems = 0;
 
-  INSPECTION_CATEGORIES.forEach(cat => {
+  const categories = (typeof getActiveCategories === 'function') ? getActiveCategories() : INSPECTION_CATEGORIES;
+
+  categories.forEach(cat => {
     totalItems += cat.items.length;
     cat.items.forEach(item => {
       const catData = inspections && inspections[cat.id] ? inspections[cat.id] : null;
