@@ -21,6 +21,16 @@ const PDF_COLORS = {
   blueBorder: [0, 0, 204]
 };
 
+// ─── Photo sizing in PDF (+20% enlarged) ───────────────────
+const PDF_PHOTO_CONFIG = {
+  width: 36,       // mm (+20% dari 30mm)
+  height: 26.4,    // mm (+20% dari 22mm)
+  gap: 4,          // mm jarak horizontal antar foto
+  stepX: 40,       // width + gap (36 + 4)
+  rowAdvance: 31,  // cursorY increment setelah baris foto
+  spaceNeeded: 34  // buffer ruang halaman sebelum cetak
+};
+
 /**
  * Main entry point – called from app.js when user clicks "Download PDF".
  */
@@ -316,7 +326,7 @@ async function buildPDF(doc) {
     // Embed photos (if any) under the row
     for (const row of tableBody) {
       if (row.photos.length) {
-        ensureSpace(30);
+        ensureSpace(PDF_PHOTO_CONFIG.spaceNeeded + 4);
         doc.setFontSize(7);
         doc.setTextColor(...PDF_COLORS.midGray);
         doc.text(`Foto ${row.id}:`, marginLeft + 2, cursorY + 3);
@@ -326,14 +336,17 @@ async function buildPDF(doc) {
           try {
             const base64 = await toBase64(photoUrl, true);
             if (base64) {
-              ensureSpace(28);
-              doc.addImage(base64, 'JPEG', photoX, cursorY, 30, 22, undefined, 'FAST');
-              photoX += 33;
-              if (photoX + 30 > pageWidth - marginRight) { photoX = marginLeft + 2; cursorY += 24; }
+              ensureSpace(PDF_PHOTO_CONFIG.spaceNeeded);
+              doc.addImage(base64, 'JPEG', photoX, cursorY, PDF_PHOTO_CONFIG.width, PDF_PHOTO_CONFIG.height, undefined, 'FAST');
+              photoX += PDF_PHOTO_CONFIG.stepX;
+              if (photoX + PDF_PHOTO_CONFIG.width > pageWidth - marginRight) {
+                photoX = marginLeft + 2;
+                cursorY += PDF_PHOTO_CONFIG.height + 2.5;
+              }
             }
           } catch (e) { console.warn('Photo embed failed:', photoUrl, e); }
         }
-        cursorY += 26;
+        cursorY += PDF_PHOTO_CONFIG.rowAdvance;
       }
     }
     cursorY += 4;
