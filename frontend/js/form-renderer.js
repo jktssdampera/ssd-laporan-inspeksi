@@ -18,11 +18,14 @@ function renderCustomerForm() {
     let value = (report.customer && report.customer[field.id]) ? report.customer[field.id] : '';
 
     // Auto-fill logic
-    if (field.id === 'inspectionDate' && !value) {
+    if (field.id === 'inspectionDate') {
       const now = new Date();
-      value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-      if (typeof updateReportField === 'function') {
-        updateReportField('customer.inspectionDate', value);
+      const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      if (value !== today) {
+        value = today;
+        if (typeof updateReportField === 'function') {
+          updateReportField('customer.inspectionDate', value);
+        }
       }
     }
     if (field.id === 'mechanicName' && (!value || value === '-')) {
