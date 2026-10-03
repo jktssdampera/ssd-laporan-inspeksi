@@ -19,7 +19,8 @@ function renderCustomerForm() {
 
     // Auto-fill logic
     if (field.id === 'inspectionDate' && !value) {
-      value = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
       if (typeof updateReportField === 'function') {
         updateReportField('customer.inspectionDate', value);
       }

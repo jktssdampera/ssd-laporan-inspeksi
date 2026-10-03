@@ -246,7 +246,7 @@ async function buildPDF(doc) {
     ['Tahun',           c.vehicleYear || '-'],
     ['Nomor Polisi',    c.vehiclePlate || '-'],
     ['Odometer',        c.vehicleOdometer ? `${Number(c.vehicleOdometer).toLocaleString('id-ID')} KM` : '-'],
-    ['Tanggal Inspeksi', formatDate(c.inspectionDate || new Date().toISOString().split('T')[0])],
+    ['Tanggal Inspeksi', formatDate(c.inspectionDate || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })())],
     ['Mekanik',         c.mechanicName || '-']
   ];
 
@@ -384,7 +384,7 @@ async function buildPDF(doc) {
   // ─── Footer with signatures ────────────────────────
   ensureSpace(55);
   const mechanic = c.mechanicName || '_______________';
-  const dateStr = c.inspectionDate ? formatDate(c.inspectionDate) : formatDate(new Date().toISOString().split('T')[0]);
+  const dateStr = c.inspectionDate ? formatDate(c.inspectionDate) : formatDate((() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })());
   doc.setDrawColor(...PDF_COLORS.border);
   doc.setLineWidth(0.3);
   doc.line(marginLeft, cursorY, pageWidth - marginRight, cursorY);
@@ -503,7 +503,7 @@ function generateFilename(report) {
   const c = report.customer || {};
   const customer = c.customerName || 'Customer';
   const plate = c.vehiclePlate || 'NoPol';
-  const date = c.inspectionDate || new Date().toISOString().split('T')[0];
+  const date = c.inspectionDate || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
   const clean = str => str.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_');
   const isBHD = (report.systemMode === 'BHD') || (c.inspectionType === 'BHD') || (typeof getActiveSystemMode === 'function' && getActiveSystemMode() === 'BHD');
   const prefix = isBHD ? 'Inspeksi_BHD' : 'Inspeksi';
@@ -512,6 +512,14 @@ function generateFilename(report) {
 
 function formatDate(dateStr) {
   const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  // Parse YYYY-MM-DD as local date (not UTC) to prevent off-by-one-day
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    return `${day} ${months[m]} ${y}`;
+  }
   const d = new Date(dateStr);
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }

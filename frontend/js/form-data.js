@@ -32,7 +32,7 @@ const AUTH_CREDENTIALS = [
   { username: 'irfan', password: 'ampera0285', displayName: 'Irfan Fauzi Nur' },
   { username: 'rizal', password: 'ampera0285', displayName: 'Rizal Pebrianto' },
   { username: 'rafa', password: 'ampera0285', displayName: 'Rafa' },
-  { username: 'ali', password: 'ampera0285', displayName: 'ali' }
+  { username: 'ali', password: 'ampera0285', displayName: 'Ali' }
 ];
 
 // ─── Default Workshop Info ───────────────────────────────────────────

@@ -185,7 +185,7 @@ async function loadReport() {
         customer: {
           inspectionType: activeMode,
           mechanicName: user ? user.displayName : '',
-          inspectionDate: new Date().toISOString().split('T')[0]
+          inspectionDate: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })()
         }
       };
       // Try to include username (column might not exist yet)
@@ -236,7 +236,7 @@ async function loadReport() {
       report.customer.mechanicName = user2.displayName;
     }
     if (!report.customer.inspectionDate) {
-      report.customer.inspectionDate = new Date().toISOString().split('T')[0];
+      report.customer.inspectionDate = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })();
     }
     
     _cache.report = report;
@@ -375,7 +375,7 @@ async function resetReport() {
       customer: {
         inspectionType: activeMode,
         mechanicName: user ? user.displayName : '',
-        inspectionDate: new Date().toISOString().split('T')[0]
+        inspectionDate: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`; })()
       }
     };
     if (username) newReportData.username = username;
